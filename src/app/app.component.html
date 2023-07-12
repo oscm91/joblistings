@@ -8,7 +8,7 @@
   </picture>
 </header>
 
-<app-tag-container></app-tag-container>
+<joblistings-tag-container></joblistings-tag-container>
 
 <main *ngIf="jobs">
   <div
@@ -51,7 +51,7 @@
       </div>
 
       <div class="details">
-        <app-language [currentJob]="job"></app-language>
+        <joblistings-language [currentJob]="job" (languageSelected)="onLanguageSelected($event)"></joblistings-language>
       </div>
     </div>
   </div>

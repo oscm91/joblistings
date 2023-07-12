@@ -1,58 +1,51 @@
-import { Component } from '@angular/core';
-import { JobModel } from './models/job.model';
-import { OnInit, OnDestroy } from '@angular/core';
-import { JobService } from './services/job.service';
-import { filter, Subscription } from 'rxjs';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
+import { JobModel } from './shared/models/job.model';
+import { JobService } from './shared/services/job.service';
+
 @Component({
   selector: 'joblistings-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit, OnDestroy {
-  jobs: JobModel[] = [];
-  JobsCopy: JobModel[] = [];
-  languages: string[] = [];
+  jobs: JobModel[] = []; // Array para almacenar los trabajos
+  JobsCopy: JobModel[] = []; // Copia del array de trabajos para filtrar
+  languages: string[] = []; // Array para almacenar los lenguajes
+  filteringTags: string[] = []; // Array para almacenar los tags de filtrado
 
-  jobSub!: Subscription;
-  existingTagsSub!: Subscription;
-  clearedTagsSub!: Subscription;
+  private unsubscribe$ = new Subject<void>(); // Subject para manejar la desuscripción de observables
 
   constructor(private jobService: JobService) {}
 
-  filteringTags: any = [];
   ngOnInit(): void {
-    this.jobSub = this.jobService.getAllJobs().subscribe((resp: any) => {
+    // Obtener todos los trabajos al inicializar el componente
+    this.jobService.getAllJobs().pipe(takeUntil(this.unsubscribe$)).subscribe((resp: any) => {
       this.jobs = resp;
       this.JobsCopy = this.jobs;
       this.languages = resp.languages;
-      //console.log(this.jobs);
     });
 
-    this.existingTagsSub = this.jobService.existingTags.subscribe((res) => {
-      //console.log(res);
+    // Suscribirse a los tags existentes para filtrar los trabajos
+    this.jobService.existingTags.pipe(takeUntil(this.unsubscribe$)).subscribe((res) => {
       this.filteringTags = res;
-
       const filteringResult = this.filterFunc(this.filteringTags, this.jobs);
-      //console.log(filteringResult);
-      if (filteringResult.length === 0) {
-        return;
-      } else {
+      if (filteringResult.length !== 0) {
         this.JobsCopy = filteringResult;
-        console.log('got new tags!');
-        console.log(this.JobsCopy);
       }
     });
 
-    this.clearedTagsSub = this.jobService.clearedTags.subscribe((res) => {
+    // Suscribirse a los tags borrados para restablecer los trabajos
+    this.jobService.clearedTags.pipe(takeUntil(this.unsubscribe$)).subscribe((res) => {
       this.JobsCopy = this.jobs;
     });
   }
 
+  // Función para filtrar los trabajos basado en los tags
   filterFunc(filterTags: string[], jobs: JobModel[]) {
-    //console.log(filterTags);
-
-    let result = jobs.filter((job) => {
-      //console.log(item.languages);
+    return jobs.filter((job) => {
       if (
         filterTags.includes(job.level) ||
         filterTags.includes(job.role) ||
@@ -63,13 +56,16 @@ export class AppComponent implements OnInit, OnDestroy {
         return false;
       }
     });
-
-    return result;
   }
 
+  // Función para manejar la selección de un lenguaje
+  onLanguageSelected(language: string) {
+    this.jobService.languageSelected.next(language);
+  }
+
+  // Función para manejar la destrucción del componente
   ngOnDestroy(): void {
-    this.jobSub.unsubscribe();
-    this.clearedTagsSub.unsubscribe();
-    this.existingTagsSub.unsubscribe();
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 }

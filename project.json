@@ -15,6 +15,7 @@
         "outputPath": "dist/joblistings",
         "index": "./src/index.html",
         "main": "./src/main.ts",
+        "baseHref": "joblistings",
         "polyfills": [
           "zone.js"
         ],

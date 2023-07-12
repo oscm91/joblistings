@@ -1,22 +1,20 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { JobModel } from 'src/app/models/job.model';
-import { JobService } from 'src/app/services/job.service';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { JobModel } from 'src/app/shared/models/job.model';
 
 @Component({
-  selector: 'app-language',
+  selector: 'joblistings-language',
   templateUrl: './language.component.html',
   styleUrls: ['./language.component.scss'],
 })
-export class LanguageComponent implements OnInit {
-  @Input() currentJob: any;
-  constructor(private jobService: JobService) {}
+export class LanguageComponent {
+  @Input() currentJob: JobModel | undefined;
+  @Output() languageSelected = new EventEmitter<string>();
 
-  ngOnInit(): void {}
 
   sendToTag(event: Event) {
-    //console.log((<HTMLSpanElement>event.target).textContent);
-    this.jobService.languageSelected.next(
-      (<HTMLButtonElement>event.target).textContent!
-    );
+    const language = (<HTMLButtonElement>event.target).textContent;
+    if (language) {
+      this.languageSelected.emit(language); // Emite el evento con el idioma seleccionado
+    }
   }
 }

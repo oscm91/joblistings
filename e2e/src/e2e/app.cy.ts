@@ -1,13 +1,18 @@
-import { getGreeting } from '../support/app.po';
+describe('AppComponent', () => {
+  beforeEach(() => {
+    cy.visit('/');
+  });
 
-describe('joblistings', () => {
-  beforeEach(() => cy.visit('/'));
+  it('should display the header image', () => {
+    cy.get('header img').should('be.visible');
+  });
 
-  it('should display welcome message', () => {
-    // Custom command example, see `../support/commands.ts` file
-    cy.login('my-email@something.com', 'myPassword');
+  it('should display job listings', () => {
+    cy.get('main .container.card').should('have.length.greaterThan', 0);
+  });
 
-    // Function helper example, see `../support/app.po.ts` file
-    getGreeting().contains('Welcome joblistings');
+  it('should display job details when a job is clicked', () => {
+    cy.get('main .container.card').first().click();
+    cy.get('.job-details').should('be.visible');
   });
 });
